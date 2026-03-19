@@ -1,0 +1,25 @@
+app = your-bustrack-app
+primary_region = sin   # Singapore — closest to Tamil Nadu
+
+[build]
+  dockerfile = Dockerfile
+
+[processes]
+  web = php artisan serve --host=0.0.0.0 --port=8080
+  reverb = php artisan reverb:start --host=0.0.0.0 --port=8084
+
+[[services]]
+  internal_port = 8080
+  protocol = tcp
+  processes = [web]
+  [[services.ports]]
+    port = 443
+    handlers = [tls, http]
+
+[[services]]
+  internal_port = 8084
+  protocol = tcp
+  processes = [reverb]
+  [[services.ports]]
+    port = 8084
+    handlers = [tls, http]
