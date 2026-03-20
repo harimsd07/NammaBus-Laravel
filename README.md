@@ -1,25 +1,46 @@
 # 🚌 NammaBus — Laravel Backend API
 
-> நம்ம பஸ் — Real-time bus tracking for everyone.
+> நம்ம பஸ் — Real-time bus tracking for everyone in Tiruchirappalli.
 
 [![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat&logo=laravel)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat&logo=php)](https://php.net)
+[![Version](https://img.shields.io/badge/Version-v2.0.0-purple?style=flat)](https://github.com/harimsd07/NammaBus-Laravel/releases/tag/v2.0.0)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+---
+
+## 📱 App Screenshots
+
+The Flutter app powered by this API:
+
+### Splash Screen
+
+| Native Splash | Flutter Splash |
+|:---:|:---:|
+| <img src="assets/screenshots/00_splash_native.png" width="180"/> | <img src="assets/screenshots/00_splash_flutter.png" width="180"/> |
+| Instant purple launch | நம்ம பஸ் · Tamil text · spinner |
+
+---
+
+### Student Experience
+
+| Landing | Bus List (Live) | Live Map |
+|:---:|:---:|:---:|
+| <img src="assets/screenshots/03_landing.png" width="180"/> | <img src="assets/screenshots/08_bus_list_live.png" width="180"/> | <img src="assets/screenshots/05_live_map_nearby.png" width="180"/> |
+| Search without login | LIVE badge via WebSocket | Real-time GPS tracking |
+
+### Driver Experience
+
+| Driver Home | Live Broadcasting | Edit Bus |
+|:---:|:---:|:---:|
+| <img src="assets/screenshots/17_driver_home_assigned.png" width="180"/> | <img src="assets/screenshots/13_driver_panel_stop.png" width="180"/> | <img src="assets/screenshots/15_edit_bus.png" width="180"/> |
+| Assigned bus via /api/my-bus | GPS broadcasting to Reverb | Edit via PUT /api/buses/{id} |
 
 ---
 
 ## 📖 About
 
-NammaBus is a real-time bus tracking application built for Tamil Nadu commuters. This repository contains the **Laravel 12 REST API backend** that powers the Flutter mobile app.
-
-Features:
-- REST API for bus schedule management
-- Real-time location broadcasting via **Laravel Reverb** (WebSocket)
-- Role-based authentication — **Student** and **Driver** roles
-- Sanctum token-based API auth
-- Google & GitHub OAuth via Laravel Socialite
-- Haversine-based proximity alert calculation
-- Password reset via email
+NammaBus Laravel backend powers the real-time bus tracking system. It provides a REST API for bus schedule management, real-time location broadcasting via **Laravel Reverb** (WebSocket), and role-based authentication for Students and Drivers.
 
 ---
 
@@ -27,22 +48,19 @@ Features:
 
 ```
 app/
-├── Http/
-│   └── Controllers/
-│       ├── AuthController.php          # Login, register, OAuth
-│       ├── BusController.php           # Bus CRUD + live location update
-│       └── Auth/
-│           └── PasswordResetController.php
+├── Http/Controllers/
+│   ├── AuthController.php          # Login, register, OAuth
+│   ├── BusController.php           # Bus CRUD + assignment + live location
+│   └── Auth/PasswordResetController.php
 ├── Models/
-│   ├── User.php                        # Student / Driver roles
-│   └── BusDetail.php                  # Bus schedule + coordinates
+│   ├── User.php                    # Student / Driver roles
+│   └── BusDetail.php              # Bus schedule + GPS coordinates
 ├── Events/
-│   └── BusLocationUpdated.php         # Reverb broadcast event
+│   └── BusLocationUpdated.php     # Reverb broadcast event
 routes/
-├── api.php                            # All API routes
-└── channels.php                       # WebSocket channel auth
-database/
-└── migrations/                        # All table migrations
+├── api.php                        # All API routes
+└── channels.php                   # WebSocket channel auth
+database/migrations/               # All table migrations
 ```
 
 ---
@@ -71,89 +89,75 @@ database/
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/harimsd07/Bus-App-Laravel.git
-cd Bus-App-Laravel
+git clone https://github.com/harimsd07/NammaBus-Laravel.git
+cd NammaBus-Laravel
 
-# Install dependencies
 composer install --ignore-platform-reqs
-
-# Copy environment file
 cp .env.example .env
-
-# Generate application key
 php artisan key:generate
-
-# Configure your .env
-# Set DB_DATABASE, DB_USERNAME, DB_PASSWORD
-
-# Run migrations
-php artisan migrate
-
-# Start the API server
-php artisan serve
-
-# In a second terminal — start WebSocket server
-php artisan reverb:start --host=0.0.0.0 --port=8080
-
-# In a third terminal — start queue worker
-php artisan queue:listen
 ```
 
----
-
-## ⚙️ Environment Variables
+### Configure `.env`
 
 ```env
-APP_NAME=NammaBus
-APP_ENV=local
-APP_URL=http://127.0.0.1:8000
-
-# Database
 DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
+DB_HOST=localhost
 DB_PORT=3306
 DB_DATABASE=busapp
 DB_USERNAME=root
 DB_PASSWORD=
+# For XAMPP on Linux — add socket path
+DB_SOCKET=/opt/lampp/var/mysql/mysql.sock
 
-# WebSocket — Laravel Reverb
-BROADCAST_CONNECTION=reverb
-REVERB_APP_ID=your_app_id
-REVERB_APP_KEY=your_app_key
-REVERB_APP_SECRET=your_app_secret
-REVERB_HOST=127.0.0.1
+REVERB_APP_KEY=your_reverb_key
 REVERB_PORT=8080
-REVERB_SCHEME=http
+BROADCAST_CONNECTION=reverb
+DRIVER_SECRET_KEY=YOUR_ADMIN_SECRET
+```
 
-# Driver registration secret
-DRIVER_SECRET_KEY=YOUR_SECRET_KEY
+### Run
 
-# Queue
-QUEUE_CONNECTION=database
+```bash
+# Terminal 1 — API server
+php artisan serve --host=0.0.0.0 --port=8000
+
+# Terminal 2 — WebSocket server
+php artisan reverb:start --host=0.0.0.0 --port=8080
+
+# Terminal 3 — Queue worker
+php artisan queue:listen
 ```
 
 ---
 
 ## 📡 API Endpoints
 
-### Authentication
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/register` | Register student or driver | Public |
-| POST | `/api/login` | Login and get token | Public |
-| POST | `/api/password/email` | Send password reset link | Public |
-| POST | `/api/password/reset` | Reset password | Public |
-| GET | `/api/auth/{provider}/redirect` | OAuth redirect (google/github) | Public |
-| GET | `/api/auth/{provider}/callback` | OAuth callback | Public |
+### Public Routes
 
-### Bus Management
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| GET | `/api/buses` | Get all buses | Public |
-| POST | `/api/buses` | Add a new bus | Public |
-| GET | `/api/search-buses` | Search buses by route | Public |
-| POST | `/api/bus/update-location` | Update live GPS location | Sanctum |
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/register` | Register student or driver |
+| POST | `/api/login` | Login and get Sanctum token |
+| POST | `/api/password/email` | Send password reset link |
+| POST | `/api/password/reset` | Reset password |
+| GET | `/api/buses` | Get all buses |
+| GET | `/api/search-buses` | Search buses by route |
+| GET | `/api/auth/{provider}/redirect` | OAuth redirect |
+| GET | `/api/auth/{provider}/callback` | OAuth callback |
+
+### Protected Routes (Sanctum token required)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/user` | Get authenticated user |
+| GET | `/api/users` | List all users |
+| POST | `/api/buses` | Register new bus |
+| PUT | `/api/buses/{id}` | Update bus details |
+| DELETE | `/api/buses/{id}` | Delete a bus |
+| POST | `/api/bus/update-location` | Update live GPS coordinates |
+| GET | `/api/my-bus` | Driver fetches their assigned bus |
+| POST | `/api/assign-bus` | Assign driver to a bus |
+| POST | `/api/unassign-bus` | Remove driver from a bus |
 
 ---
 
@@ -163,9 +167,7 @@ Channel: `bus-tracking.{busId}`
 
 | Event | Payload | Description |
 |---|---|---|
-| `BusLocationUpdated` | `{ bus: { id, latitude, longitude } }` | Fired when driver updates location |
-
-Flutter app subscribes to this channel to move the bus marker on the map in real time.
+| `BusLocationUpdated` | `{ bus: { id, latitude, longitude } }` | Fired when driver updates GPS |
 
 ---
 
@@ -184,6 +186,7 @@ Flutter app subscribes to this channel to move the bus marker on the map in real
 | Column | Type | Description |
 |---|---|---|
 | id | bigint | Primary key |
+| driver_id | bigint | Assigned driver (nullable FK) |
 | busNameOrbusNo | string | Bus name / route number |
 | vehicle_no | string | Registration number |
 | pick_up_stop | string | Starting point |
@@ -192,52 +195,46 @@ Flutter app subscribes to this channel to move the bus marker on the map in real
 | reach_destination_time | time | Arrival time (HH:mm:ss) |
 | latitude | decimal(10,8) | Current GPS latitude |
 | longitude | decimal(11,8) | Current GPS longitude |
-| driver_id | bigint | Assigned driver (nullable) |
 
 ---
 
 ## 🔐 Role System
 
-| Role | Can do |
+| Role | Permissions |
 |---|---|
 | `student` | View buses, search routes, track live location |
-| `driver` | All of the above + broadcast GPS location |
-
-Driver registration requires a secret key (`DRIVER_SECRET_KEY` in `.env`) to prevent unauthorized driver accounts.
+| `driver` | All of the above + broadcast GPS + edit/delete assigned bus |
 
 ---
 
 ## ☁️ Deployment (Fly.io + PlanetScale)
 
 ```bash
-# Install Fly CLI
-curl -L https://fly.io/install.sh | sh
-
-# Login
+# Install Fly CLI and login
 fly auth login
 
-# Launch app
+# Launch and deploy
 fly launch
+fly deploy
 
-# Set environment secrets
+# Set secrets
 fly secrets set APP_KEY=your_key
 fly secrets set DB_HOST=your_planetscale_host
 fly secrets set DB_PASSWORD=your_password
-fly secrets set REVERB_APP_KEY=your_reverb_key
-
-# Deploy
-fly deploy
+fly secrets set REVERB_APP_KEY=your_key
+fly secrets set DRIVER_SECRET_KEY=your_secret
 ```
 
 ---
 
-## 🗺️ Roadmap — v2
+## 🗺️ Roadmap — v3
 
-- [ ] Push notifications when bus is nearby
-- [ ] Admin panel for bus management
-- [ ] Driver assignment to specific buses
-- [ ] Route polyline on map
-- [ ] Bus delay reporting
+- [ ] Bus ETA calculation endpoint
+- [ ] Bus delay reporting by driver
+- [ ] FCM push notifications
+- [ ] Admin panel (Laravel Blade)
+- [ ] API rate limiting
+- [ ] Laravel Telescope monitoring
 
 ---
 

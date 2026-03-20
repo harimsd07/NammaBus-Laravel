@@ -6,22 +6,35 @@ use Illuminate\Database\Eloquent\Model;
 
 class BusDetail extends Model
 {
-    // Logic: Explicitly link to the exact table name from your migration
+    // Table name — explicitly set to match migration
     protected $table = 'bus_detail_tables';
 
-    // Logic: Disable timestamps since your raw DB check showed they are empty
-    
-    // Logic: Ensure the primary key is set to 'id' (standard, but safe to define)
+    // Fix: timestamps default is true — removed the false override
+    // Migration has timestamps() so this must be true
+    public $timestamps = true;
+
     protected $primaryKey = 'id';
 
     protected $fillable = [
-    'busNameOrbusNo',  // ← was 'local' — WRONG!
-    'vehicle_no',
-    'pick_up_stop',
-    'destination',
-    'pickup_time',
-    'reach_destination_time',
-    'latitude',
-    'longitude',
-];
+        'busNameOrbusNo',
+        'vehicle_no',
+        'pick_up_stop',
+        'destination',
+        'pickup_time',
+        'reach_destination_time',
+        'latitude',
+        'longitude',
+        'driver_id', // Added — needed for driver-bus assignment in v2
+    ];
+
+    protected $casts = [
+        'latitude'  => 'float',
+        'longitude' => 'float',
+    ];
+
+    // Relationship: bus belongs to a driver (User)
+    public function driver()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'driver_id');
+    }
 }

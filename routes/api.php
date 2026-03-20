@@ -6,43 +6,47 @@ use App\Http\Controllers\BusController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+// ── Public routes ─────────────────────────────────────────────────────────────
 
-
-// authentication
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login',    [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-Route::get('/users', [AuthController::class, 'listUsers']);
-
-
-// Logic: Routes for requesting a reset and submitting the new password
 Route::post('/password/email', [PasswordResetController::class, 'sendResetLinkEmail']);
 Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 
-
-Route::get('/buses',[BusController::class,'index']);
-
-Route::post('/buses', [BusController::class, 'store']);
-
-Route::middleware('auth:sanctum')->post('/bus/update-location', [BusController::class, 'updateLocation']);
-
-
-
-Route::get('/search-buses', [BusController::class, 'search']);
-
-
-
-/*
-|--------------------------------------------------------------------------
-| Social Auth Routes [Added at the bottom for Google and GitHub flow]
-|--------------------------------------------------------------------------
-*/
 Route::get('auth/{provider}/redirect', [AuthController::class, 'redirectToProvider']);
 Route::get('auth/{provider}/callback', [AuthController::class, 'handleProviderCallback']);
 
+// Bus reading — public so guests can search on landing screen
+Route::get('/buses',        [BusController::class, 'index']);
+Route::get('/search-buses', [BusController::class, 'search']);
 
-// After
-Route::middleware('auth:sanctum')->get('/users', [AuthController::class, 'listUsers']);
+// ── Authenticated routes ───────────────────────────────────────────────────────
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Auth user info
+    Route::get('/user',  fn(Request $r) => $r->user());
+    Route::get('/users', [AuthController::class, 'listUsers']);
+
+    // Bus write operations
+    Route::post('/buses',        [BusController::class, 'store']);
+    Route::put('/buses/{id}',    [BusController::class, 'update']);
+    Route::delete('/buses/{id}', [BusController::class, 'delete']);
+
+    // Live location update
+    Route::post('/bus/update-location', [BusController::class, 'updateLocation']);
+
+    // ── Phase 2: Driver-Bus Assignment routes ─────────────────────────────────
+
+    // Driver fetches their assigned bus
+    // Returns the bus where driver_id = authenticated user's id
+    Route::get('/my-bus', [BusController::class, 'myBus']);
+
+    // Admin assigns a driver to a bus
+    // Body: { bus_id, driver_id }
+    Route::post('/assign-bus', [BusController::class, 'assignBus']);
+
+    // Admin unassigns a driver from a bus
+    Route::post('/unassign-bus', [BusController::class, 'unassignBus']);
+});
