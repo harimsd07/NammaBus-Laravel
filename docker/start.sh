@@ -6,8 +6,8 @@ cd /var/www/html
 # Run migrations
 php artisan migrate --force
 
-# Seed database (--class flag runs only DatabaseSeeder, safe to run multiple times)
-php artisan db:seed --force
+# Seed only our DatabaseSeeder (not factories)
+php artisan db:seed --class=DatabaseSeeder --force
 
 # Cache config for production
 php artisan config:cache
