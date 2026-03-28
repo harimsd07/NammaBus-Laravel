@@ -1,17 +1,34 @@
-FROM php:8.4-cli
+FROM php:8.2-fpm-alpine
 
-# Install system deps + ext-pcntl (required for Reverb)
-RUN apt-get update && apt-get install -y     git curl zip unzip libpq-dev libzip-dev     && docker-php-ext-install pdo pdo_mysql zip pcntl
+# Install system dependencies
+RUN apk add --no-cache     nginx     supervisor     curl     zip     unzip     git     nodejs     npm
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql opcache bcmath
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www
+WORKDIR /var/www/html
 
+# Copy project files
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-RUN php artisan config:cache &&     php artisan route:cache &&     php artisan event:cache
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html     && chmod -R 755 /var/www/html/storage     && chmod -R 755 /var/www/html/bootstrap/cache
 
-EXPOSE 8080 8084
+# Copy config files
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# Create startup script
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 8080 8081
+
+CMD [/start.sh]

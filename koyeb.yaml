@@ -1,0 +1,27 @@
+name: nammabus-api
+services:
+  - name: web
+    type: web
+    git:
+      repository: github.com/yourusername/bus-app-laravel
+      branch: main
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - port: 8080
+        protocol: http
+    env:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: BROADCAST_CONNECTION
+        value: reverb
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
