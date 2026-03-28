@@ -66,12 +66,7 @@ return [
     | your server will support, including their connection credentials.
     |
     */
-
-    'apps' => [
-
-        'provider' => 'config',
-
-        'apps' => [
+'apps' => [
     [
         'id'      => env('REVERB_APP_ID'),
         'key'     => env('REVERB_APP_KEY'),
@@ -84,6 +79,5 @@ return [
         ],
     ],
 ],
-    ],
 
 ];

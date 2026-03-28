@@ -44,3 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bus/report-delay', [BusController::class, 'reportDelay']);
     Route::post('/bus/clear-delay',  [BusController::class, 'clearDelay']);
 });
+
+
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});

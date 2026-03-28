@@ -6,10 +6,10 @@ cd /var/www/html
 # Run migrations
 php artisan migrate --force
 
-# Clear and cache config for production
+# Cache config for production
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Start supervisor (runs nginx + php-fpm + reverb + queue)
+# Start all processes via supervisor
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
