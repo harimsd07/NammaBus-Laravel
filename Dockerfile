@@ -7,7 +7,7 @@ RUN apk add --no-cache \
     curl \
     zip \
     unzip \
-    git
+    
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql opcache bcmath
