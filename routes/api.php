@@ -17,7 +17,6 @@ Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 Route::get('auth/{provider}/redirect', [AuthController::class, 'redirectToProvider']);
 Route::get('auth/{provider}/callback', [AuthController::class, 'handleProviderCallback']);
 
-// Bus reading — public so guests can search on landing screen
 Route::get('/buses',        [BusController::class, 'index']);
 Route::get('/search-buses', [BusController::class, 'search']);
 
@@ -25,28 +24,23 @@ Route::get('/search-buses', [BusController::class, 'search']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth user info
     Route::get('/user',  fn(Request $r) => $r->user());
     Route::get('/users', [AuthController::class, 'listUsers']);
 
-    // Bus write operations
+    // Bus management
     Route::post('/buses',        [BusController::class, 'store']);
     Route::put('/buses/{id}',    [BusController::class, 'update']);
     Route::delete('/buses/{id}', [BusController::class, 'delete']);
 
-    // Live location update
+    // Live location
     Route::post('/bus/update-location', [BusController::class, 'updateLocation']);
 
-    // ── Phase 2: Driver-Bus Assignment routes ─────────────────────────────────
-
-    // Driver fetches their assigned bus
-    // Returns the bus where driver_id = authenticated user's id
-    Route::get('/my-bus', [BusController::class, 'myBus']);
-
-    // Admin assigns a driver to a bus
-    // Body: { bus_id, driver_id }
-    Route::post('/assign-bus', [BusController::class, 'assignBus']);
-
-    // Admin unassigns a driver from a bus
+    // Driver-bus assignment
+    Route::get('/my-bus',        [BusController::class, 'myBus']);
+    Route::post('/assign-bus',   [BusController::class, 'assignBus']);
     Route::post('/unassign-bus', [BusController::class, 'unassignBus']);
+
+    // Phase 3 — Delay reporting
+    Route::post('/bus/report-delay', [BusController::class, 'reportDelay']);
+    Route::post('/bus/clear-delay',  [BusController::class, 'clearDelay']);
 });

@@ -121,6 +121,7 @@ return [
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
+        'admin_panel_password' => env('ADMIN_PANEL_PASSWORD', 'admin123'),
     ],
 
 ];

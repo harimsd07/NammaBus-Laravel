@@ -6,13 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class BusDetail extends Model
 {
-    // Table name — explicitly set to match migration
-    protected $table = 'bus_detail_tables';
-
-    // Fix: timestamps default is true — removed the false override
-    // Migration has timestamps() so this must be true
-    public $timestamps = true;
-
+    protected $table      = 'bus_detail_tables';
+    public    $timestamps = true;
     protected $primaryKey = 'id';
 
     protected $fillable = [
@@ -24,17 +19,28 @@ class BusDetail extends Model
         'reach_destination_time',
         'latitude',
         'longitude',
-        'driver_id', // Added — needed for driver-bus assignment in v2
+        'driver_id',
+        // Phase 3 — delay reporting
+        'delay_minutes',
+        'delay_reason',
+        'delay_reported_at',
     ];
 
     protected $casts = [
-        'latitude'  => 'float',
-        'longitude' => 'float',
+        'latitude'          => 'float',
+        'longitude'         => 'float',
+        'delay_minutes'     => 'integer',
+        'delay_reported_at' => 'datetime',
     ];
 
-    // Relationship: bus belongs to a driver (User)
     public function driver()
     {
         return $this->belongsTo(\App\Models\User::class, 'driver_id');
+    }
+
+    // Helper: is this bus currently delayed?
+    public function isDelayed(): bool
+    {
+        return $this->delay_minutes !== null && $this->delay_minutes > 0;
     }
 }

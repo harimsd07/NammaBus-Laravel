@@ -232,6 +232,75 @@ class BusController extends Controller
         ]);
     }
 
+
+    // ── Phase 3: reportDelay() — driver reports a delay ──────────────────────
+
+    public function reportDelay(Request $request)
+    {
+        $request->validate([
+            'id'             => 'required|exists:bus_detail_tables,id',
+            'delay_minutes'  => 'required|integer|min:1|max:120',
+            'delay_reason'   => 'required|string|max:255',
+        ]);
+
+        $bus = BusDetail::findOrFail($request->id);
+
+        // Only the assigned driver can report a delay
+        if ($bus->driver_id !== null &&
+            $bus->driver_id !== $request->user()->id) {
+            return response()->json([
+                'status'  => 403,
+                'message' => 'You are not assigned to this bus',
+            ], 403);
+        }
+
+        $bus->delay_minutes     = $request->delay_minutes;
+        $bus->delay_reason      = $request->delay_reason;
+        $bus->delay_reported_at = now();
+        $bus->save();
+
+        // Broadcast delay update so students see it in real time
+        event(new \App\Events\BusLocationUpdated($bus));
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Delay reported successfully',
+            'data'    => $bus,
+        ]);
+    }
+
+    // ── Phase 3: clearDelay() — driver clears a previously reported delay ────
+
+    public function clearDelay(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:bus_detail_tables,id',
+        ]);
+
+        $bus = BusDetail::findOrFail($request->id);
+
+        if ($bus->driver_id !== null &&
+            $bus->driver_id !== $request->user()->id) {
+            return response()->json([
+                'status'  => 403,
+                'message' => 'You are not assigned to this bus',
+            ], 403);
+        }
+
+        $bus->delay_minutes     = null;
+        $bus->delay_reason      = null;
+        $bus->delay_reported_at = null;
+        $bus->save();
+
+        event(new \App\Events\BusLocationUpdated($bus));
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Delay cleared successfully',
+            'data'    => $bus,
+        ]);
+    }
+
     // ── Haversine ─────────────────────────────────────────────────────────────
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2): float
