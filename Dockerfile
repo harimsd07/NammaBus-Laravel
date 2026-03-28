@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     unzip
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql opcache bcmath
+RUN docker-php-ext-install pdo pdo_mysql opcache bcmath pcntl
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
